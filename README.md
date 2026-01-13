@@ -23,7 +23,7 @@ An AI-powered web application that provides instant feedback on your CV (resume)
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/cv-assist.git
+   git clone https://github.com/talel-ben-gharbia/CV-feedback.git
    cd cv-assist
    ```
 
