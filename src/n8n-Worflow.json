@@ -1,0 +1,237 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Assistant",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        -64
+      ],
+      "id": "99a512d2-eb97-473b-adce-606089430387",
+      "name": "Webhook",
+      "webhookId": "8199531f-cc8b-47de-b568-17d68a9b5e30",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "model": "groq/compound",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        672,
+        208
+      ],
+      "id": "313398ef-0a0c-4584-b83c-5290feb0a08a",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "cxD42PoncoPox5Fd",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        128,
+        -208
+      ],
+      "id": "1575d20a-fe12-4ee5-a77e-3969abcef25c",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Target Job Title: {{ $json.job_title }}\n---\nResume Content: {{ $json.cv_text }}",
+        "options": {
+          "systemMessage": "=You are a Senior Technical Recruiter and Career Coach with 15+ years of experience in hiring for AI, Machine Learning, Data, and Software Engineering roles.\n\nContext:\nYou are evaluating a candidate’s resume (CV) against a specific Job Title provided by the user. The CV text may be noisy or unstructured.\n\nIMPORTANT OUTPUT RULES (STRICT):\n- Do NOT use tables.\n- Do NOT use bullet lists for analysis.\n- Do NOT format content as comparisons or grids.\n- Write ONLY in clear, professional paragraphs.\n- Use headings and subheadings, but explanations must be paragraph-based.\n- The result should read like a human-written HR assessment report.\n\nYour tasks:\n1. Briefly describe how well the candidate fits the target Job Title in plain language.\n2. Provide a **Matching Score from 0 to 100**, explained in paragraph form (no breakdown tables).\n3. Clearly explain the main strengths found in the CV, written as a short paragraph.\n4. Clearly explain the main gaps or missing requirements compared to the target role, written as a short paragraph.\n5. Provide exactly **3 actionable improvement recommendations**, each written as a short paragraph (not bullets).\n\nScoring guidance:\n- 0–30: Very weak or mostly irrelevant match\n- 31–50: Partial match with major gaps\n- 51–70: Junior-level fit with clear development needs\n- 71–85: Strong junior/mid-level fit\n- 86–100: Excellent and job-ready fit\n\nTone & Style:\n- Professional, realistic, and encouraging\n- Honest but not harsh\n- Avoid academic or robotic language\n- Write as if the candidate will directly read this feedback\n\nConstraints:\n- Never invent skills, tools, or experience.\n- Base everything strictly on the CV content.\n- If the CV is weak or unrelated, say so clearly and professionally.\n- Focus on real market expectations for the given Job Title.\n- Match the language of the input.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        672,
+        -48
+      ],
+      "id": "29cb987a-d89b-402d-a50c-d55f2f7e4e29",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        976,
+        -48
+      ],
+      "id": "a691f28b-0dc5-43b5-95c1-5fb3aa1edcaa",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b9dcc163-2fab-4c65-938b-113e3956eee0",
+              "name": "job_title",
+              "value": "={{ $json.body.jobTitle }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        64
+      ],
+      "id": "047f43bc-199f-49c9-8b1e-51f2c12f977b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        496,
+        -48
+      ],
+      "id": "23cae219-9e27-4dc3-818e-4503ba434a5f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e4bbb7f-03b1-4656-a81f-faeeac101619",
+              "name": "cv_text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        -208
+      ],
+      "id": "de22b675-61de-42b6-8e34-2b110540e9c6",
+      "name": "Edit Fields1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fd93e7c013de3867c560b915d41413761a965b93d71e208e6807990d59dd5b35"
+  }
+}
